@@ -1,0 +1,11 @@
+streamlit
+speechrecognition
+numpy
+pillow
+pypdf2
+pandas
+plotly
+deepface
+reportlab
+opencv-python
+mediapipe
