@@ -1,4 +1,4 @@
-streamlit==1.30.0
+streamlit==1.32.0
 speechrecognition
 numpy==1.26.4
 pillow
@@ -6,7 +6,7 @@ pypdf2
 pandas==2.2.2
 plotly
 opencv-python-headless
-mediapipe
+mediapipe==0.10.9
 reportlab
 deepface==0.0.79
 tensorflow-cpu==2.15.0
