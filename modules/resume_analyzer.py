@@ -156,6 +156,18 @@ def show_resume():
         else:
             st.success("All important sections are present ✅")
 
+        # ===============================
+        # ✅ ADD THIS (STORE RESULT FOR PDF)
+        # ===============================
+        st.session_state["resume_result"] = {
+            "word_count": word_count,
+            "ats_score": ats_score,
+            "skills": detected_skills,
+            "level": level,
+            "missing_sections": missing_sections,
+            "suggestions": suggestions
+        }
+
         # -------------------- DOWNLOAD REPORT --------------------
 
         st.subheader("📄 Download Report")
