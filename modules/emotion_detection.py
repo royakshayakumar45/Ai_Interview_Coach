@@ -115,6 +115,17 @@ def show_emotion():
                     cv2.putText(frame,f"Overall Confidence: {overall_score}",(10,90),
                                 cv2.FONT_HERSHEY_SIMPLEX,0.8,(0,255,0),2)
 
+                    # ===============================
+                    # ✅ ADD THIS (STORE RESULT)
+                    # ===============================
+                    st.session_state["emotion_result"] = {
+                        "emotion": emotion,
+                        "emotion_score": int(score),
+                        "body_score": body_score,
+                        "overall_score": overall_score,
+                        "confidence_level": conf_label
+                    }
+
                 except:
                     pass
 
