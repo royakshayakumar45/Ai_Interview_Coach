@@ -1,190 +1,71 @@
 import streamlit as st
-from PyPDF2 import PdfReader
-from ml_models.resume_model import resume_score
-import plotly.express as px
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
 
-def show_resume():
+def show_report():
 
-    st.title("📄 Resume Analyzer")
+    st.title("📄 Generate Final Interview Report")
 
-    file = st.file_uploader("Upload Resume", type=["pdf"])
+    if st.button("Generate Full PDF Report"):
 
-    if file:
+        styles = getSampleStyleSheet()
+        doc = SimpleDocTemplate("final_report.pdf")
 
-        reader = PdfReader(file)
+        story = []
 
-        text = ""
+        # -------------------- TITLE --------------------
+        story.append(Paragraph("AI Interview Full Report", styles['Title']))
+        story.append(Spacer(1, 20))
 
-        for page in reader.pages:
-            text += page.extract_text()
+        user = st.session_state.get("user", "Unknown User")
+        story.append(Paragraph(f"User: {user}", styles['Normal']))
+        story.append(Spacer(1, 20))
 
-        # ❌ Removed Resume Score display (as instructed)
+        # ===============================
+        # INTERVIEW ANALYSIS DATA
+        # ===============================
+        interview = st.session_state.get("interview_result", None)
 
-        words = text.split()
-        word_count = len(words)
+        if interview:
+            story.append(Paragraph("Interview Analysis", styles['Heading2']))
+            story.append(Spacer(1, 10))
 
-        st.subheader("📊 Resume Statistics")
+            story.append(Paragraph(f"Transcript: {interview.get('text','')}", styles['Normal']))
+            story.append(Paragraph(f"Sentiment: {interview.get('sentiment','')}", styles['Normal']))
+            story.append(Paragraph(f"Confidence: {interview.get('confidence','')}", styles['Normal']))
+            story.append(Paragraph(f"Filler Words: {interview.get('filler','')}", styles['Normal']))
+            story.append(Paragraph(f"Answer Score: {interview.get('score','')}", styles['Normal']))
 
-        col1, col2 = st.columns(2)
+            story.append(Spacer(1, 20))
 
-        col1.metric("Total Words", word_count)
-        col2.metric("Estimated Pages", round(word_count / 250, 2))
+        # ===============================
+        # RESUME DATA
+        # ===============================
+        resume = st.session_state.get("resume_result", None)
 
-        # -------------------- SKILL DETECTION --------------------
+        if resume:
+            story.append(Paragraph("Resume Analysis", styles['Heading2']))
+            story.append(Spacer(1, 10))
 
-        skills = [
-            "python","java","machine learning","deep learning",
-            "ai","data science","sql","excel","power bi",
-            "tensorflow","pytorch","flask","django"
-        ]
+            story.append(Paragraph(f"Word Count: {resume.get('word_count','')}", styles['Normal']))
+            story.append(Paragraph(f"ATS Score: {resume.get('ats_score','')}", styles['Normal']))
+            story.append(Paragraph(f"Skills: {resume.get('skills','')}", styles['Normal']))
+            story.append(Paragraph(f"Experience Level: {resume.get('level','')}", styles['Normal']))
+            story.append(Paragraph(f"Missing Sections: {resume.get('missing_sections','')}", styles['Normal']))
 
-        detected_skills = []
+            story.append(Spacer(1, 20))
 
-        for skill in skills:
-            if skill in text.lower():
-                detected_skills.append(skill)
+        # ===============================
+        # BUILD PDF
+        # ===============================
+        doc.build(story)
 
-        st.subheader("🧠 Detected Skills")
-
-        if detected_skills:
-            st.success(", ".join(detected_skills))
-        else:
-            st.warning("No major skills detected")
-
-        # -------------------- ATS SCORE --------------------
-
-        ats_keywords = [
-            "project","experience","internship",
-            "leadership","team","communication",
-            "analysis","problem solving"
-        ]
-
-        ats_count = 0
-
-        for word in ats_keywords:
-            if word in text.lower():
-                ats_count += 1
-
-        ats_score = int((ats_count / len(ats_keywords)) * 100)
-
-        st.subheader("🎯 ATS Match Score")
-
-        st.metric("ATS Score", ats_score)
-        st.progress(min(ats_score/100,1.0))
-
-        # -------------------- KEYWORD DENSITY --------------------
-
-        st.subheader("📈 Keyword Density Analysis")
-
-        keyword_freq = {}
-
-        for word in words:
-            word = word.lower()
-            if word in skills:
-                keyword_freq[word] = keyword_freq.get(word, 0) + 1
-
-        if keyword_freq:
-            fig = px.bar(
-                x=list(keyword_freq.keys()),
-                y=list(keyword_freq.values()),
-                title="Skill Frequency in Resume"
+        # -------------------- DOWNLOAD --------------------
+        with open("final_report.pdf", "rb") as f:
+            st.download_button(
+                "📥 Download Full Report",
+                f,
+                file_name="AI_Interview_Report.pdf"
             )
-            st.plotly_chart(fig, use_container_width=True)
-        else:
-            st.info("No keyword frequency data available")
 
-        # -------------------- EXPERIENCE LEVEL ESTIMATION --------------------
-
-        st.subheader("🧑‍💼 Experience Level Estimation")
-
-        if "intern" in text.lower():
-            level = "Fresher / Intern"
-        elif "project" in text.lower() and "experience" not in text.lower():
-            level = "Entry Level"
-        elif "experience" in text.lower():
-            level = "Experienced"
-        else:
-            level = "Unknown"
-
-        st.success(f"Detected Level: {level}")
-
-        # -------------------- AI SUGGESTIONS --------------------
-
-        st.subheader("🤖 AI Resume Suggestions")
-
-        suggestions = []
-
-        if word_count < 200:
-            suggestions.append("Increase resume content. Add more projects and details.")
-
-        if not detected_skills:
-            suggestions.append("Add technical skills to improve ATS performance.")
-
-        if ats_score < 50:
-            suggestions.append("Use more ATS-friendly keywords like project, leadership, communication.")
-
-        if "objective" not in text.lower():
-            suggestions.append("Add a career objective section.")
-
-        if "project" not in text.lower():
-            suggestions.append("Include project experience.")
-
-        if suggestions:
-            for s in suggestions:
-                st.warning(s)
-        else:
-            st.success("Your resume looks strong!")
-
-        # -------------------- SECTION CHECK --------------------
-
-        st.subheader("📂 Resume Section Check")
-
-        sections = ["education", "experience", "skills", "projects", "certification"]
-
-        found_sections = []
-
-        for sec in sections:
-            if sec in text.lower():
-                found_sections.append(sec)
-
-        st.write("Sections Found:", ", ".join(found_sections) if found_sections else "None")
-
-        missing_sections = list(set(sections) - set(found_sections))
-
-        if missing_sections:
-            st.error("Missing Sections: " + ", ".join(missing_sections))
-        else:
-            st.success("All important sections are present ✅")
-
-        # ===============================
-        # ✅ ADD THIS (STORE RESULT FOR PDF)
-        # ===============================
-        st.session_state["resume_result"] = {
-            "word_count": word_count,
-            "ats_score": ats_score,
-            "skills": detected_skills,
-            "level": level,
-            "missing_sections": missing_sections,
-            "suggestions": suggestions
-        }
-
-        # -------------------- DOWNLOAD REPORT --------------------
-
-        st.subheader("📄 Download Report")
-
-        report = f"""
-Resume Analysis Report
-
-Word Count: {word_count}
-ATS Score: {ats_score}
-Detected Skills: {detected_skills}
-Experience Level: {level}
-Missing Sections: {missing_sections}
-Suggestions: {suggestions}
-"""
-
-        st.download_button(
-            "Download Report",
-            report,
-            file_name="resume_analysis.txt"
-        )
+        st.success("✅ Full Report Generated Successfully!")
