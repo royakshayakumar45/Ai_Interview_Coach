@@ -175,6 +175,9 @@ Detected Skills: {detected}
 Answer Score: {answer_score}
 """
 
+    # ✅ ADDED THIS LINE (IMPORTANT FOR PDF)
+    st.session_state["interview_result"] = report
+
     st.download_button(
         "Download Report",
         report,
