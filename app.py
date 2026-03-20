@@ -2,6 +2,15 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import streamlit as st
+
+# ===============================
+# ✅ PAGE CONFIG (MOVED TO TOP)
+# ===============================
+st.set_page_config(
+    page_title="AI Interview Coach PRO MAX",
+    layout="wide"
+)
+
 import sqlite3
 import hashlib
 from database.database import init_db
@@ -104,15 +113,6 @@ from modules.logout import do_logout
 
 from auth.login import login
 from auth.register import register_user
-
-# ===============================
-# PAGE CONFIG
-# ===============================
-
-st.set_page_config(
-    page_title="AI Interview Coach PRO MAX",
-    layout="wide"
-)
 
 # ===============================
 # DATABASE
@@ -253,12 +253,7 @@ else:
 
     elif menu == "Admin Panel":
 
-        # ✅ ORIGINAL ADMIN
         show_admin(conn, st.session_state.role)
-
-        # ===============================
-        # 🔥 ADVANCED ADMIN CONTROL (ADDED)
-        # ===============================
 
         if st.session_state.role == "admin":
 
@@ -266,7 +261,6 @@ else:
 
             col1, col2 = st.columns(2)
 
-            # DELETE ALL USERS
             if col1.button("🗑 Delete All Users"):
                 try:
                     conn.execute("DELETE FROM users")
@@ -275,7 +269,6 @@ else:
                 except Exception as e:
                     st.error(e)
 
-            # DELETE ALL RESULTS
             if col2.button("🧹 Clear All Results"):
                 try:
                     conn.execute("DELETE FROM results")
@@ -284,7 +277,6 @@ else:
                 except Exception as e:
                     st.error(e)
 
-            # SYSTEM STATS
             st.subheader("📊 System Stats")
 
             try:
@@ -297,7 +289,6 @@ else:
             except:
                 st.warning("Stats not available")
 
-            # DOWNLOAD DATABASE
             st.subheader("⬇ Backup Database")
 
             try:
